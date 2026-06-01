@@ -1,0 +1,91 @@
+/* Mallard injects theme tokens onto every plugin iframe via CSS variables;
+   fall back to dark defaults if no theme is active. */
+
+:root {
+  --bg:         #1a1a1a;
+  --fg:         #d8d8d8;
+  --fg-muted:   #888;
+  --accent:     #88ccff;
+  --good:       #aaffaa;
+  --warn:       #ffcc88;
+  --border:     #2a2a2a;
+  --row-active: #233040;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font: 12px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+body { padding: 8px 10px; overflow: hidden; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+th, td {
+  padding: 2px 0;
+  line-height: 1.5;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+thead .title {
+  text-align: left;
+  font-weight: 600;
+  color: var(--fg);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+thead .header-right {
+  text-align: right;
+  font-weight: 500;
+  padding-bottom: 6px;
+  padding-left: 8px;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+thead .header-right.cooldown { color: var(--warn); }
+thead .header-right.ready    { color: var(--good); }
+
+tbody td.marker { width: 12px; padding-right: 4px; color: var(--accent); }
+tbody td.name   { color: var(--fg);       padding-left: 2px; }
+tbody td.time   { color: var(--fg);       padding-left: 10px; text-align: right; }
+tbody td.xp     { color: var(--fg-muted); padding-left: 10px; text-align: right; min-width: 56px; }
+
+tbody tr.active td        { background: var(--row-active); }
+tbody tr.active td.name,
+tbody tr.active td.time   { color: var(--accent); }
+
+tfoot td {
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+tfoot .total-name {
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  font-family: system-ui, sans-serif;
+  padding-left: 2px;
+}
+tfoot .total-time {
+  text-align: right;
+  color: var(--fg);
+  font-weight: 500;
+  padding-left: 10px;
+}
+tfoot .total-xp {
+  text-align: right;
+  color: var(--fg);
+  font-weight: 500;
+  padding-left: 10px;
+}
