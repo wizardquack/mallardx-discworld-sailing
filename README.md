@@ -52,12 +52,6 @@ A 1-second timer drives every cell:
 | `!nextStage <X>` | Force a transition to weather stage `X`.            |
 | `!sailData`      | Dump the current trip stages + XP table via `mud.note`. |
 
-## Dev rebuild
-
-```sh
-bash scripts/reinstall.sh
-```
-
 ## Changelog
 
 ### v0.4.0
