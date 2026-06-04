@@ -1,6 +1,6 @@
 id = "net.mallard.discworld-sailing"
 name = "Discworld Sailing"
-version = "0.5.0"
+version = "0.5.1"
 language = "lua"
 entry = "src/main.lua"
 mallard_api_version = "1.0"
