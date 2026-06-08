@@ -272,7 +272,7 @@ end
 -- pushes the full state snapshot.
 -- ---------------------------------------------------------------------
 
-mud.timer.every(1000, function()
+mud.every(1000, function()
   local changed = false
 
   if currentCooldown > 0 then
