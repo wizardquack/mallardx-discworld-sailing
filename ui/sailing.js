@@ -17,17 +17,15 @@ const rowEls = [];
 for (let i = 0; i < ROWS; i++) {
   const tr = document.createElement("tr");
   tr.innerHTML =
-    '<td class="marker"></td>' +
-    '<td class="name"></td>'   +
-    '<td class="time"></td>'   +
-    '<td class="xp"></td>';
+    '<td class="name"></td>' +
+    '<td class="xp"></td>'   +
+    '<td class="time"></td>';
   rowsEl.appendChild(tr);
   rowEls.push({
     tr,
-    marker: tr.children[0],
-    name:   tr.children[1],
-    time:   tr.children[2],
-    xp:     tr.children[3],
+    name: tr.children[0],
+    xp:   tr.children[1],
+    time: tr.children[2],
   });
 }
 
@@ -46,12 +44,10 @@ function applyState(state) {
   for (let i = 0; i < ROWS; i++) {
     const row = rows[i] || {};
     const el = rowEls[i];
-    const active = i === activeIndex;
-    el.tr.classList.toggle("active", active);
-    el.marker.textContent = active ? "▸" : NBSP;
+    el.tr.classList.toggle("active", i === activeIndex);
     el.name.textContent = cell(row.name);
-    el.time.textContent = cell(row.time);
     el.xp.textContent   = cell(row.xp);
+    el.time.textContent = cell(row.time);
   }
 
   const total = state.total;

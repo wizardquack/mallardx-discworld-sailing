@@ -6,10 +6,12 @@
   --fg:         #d8d8d8;
   --fg-muted:   #888;
   --accent:     #88ccff;
-  --good:       #aaffaa;
-  --warn:       #ffcc88;
   --border:     #2a2a2a;
-  --row-active: #233040;
+  /* Theme-aware status colors — mallard injects --ansi-N per theme so
+     these adapt to light/dark; hex fallbacks keep us readable standalone. */
+  --good:       var(--ansi-10, #4ade80);
+  --warn:       var(--ansi-9,  #fb923c);
+  --row-active: color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 * { box-sizing: border-box; }
@@ -56,10 +58,9 @@ thead .header-right {
 thead .header-right.cooldown { color: var(--warn); }
 thead .header-right.ready    { color: var(--good); }
 
-tbody td.marker { width: 12px; padding-right: 4px; color: var(--accent); }
-tbody td.name   { color: var(--fg);       padding-left: 2px; }
-tbody td.time   { color: var(--fg);       padding-left: 10px; text-align: right; }
-tbody td.xp     { color: var(--fg-muted); padding-left: 10px; text-align: right; min-width: 56px; }
+tbody td.name { color: var(--fg);       padding-left: 2px; }
+tbody td.xp   { color: var(--fg-muted); padding-left: 10px; text-align: right; min-width: 56px; }
+tbody td.time { color: var(--fg);       padding-left: 10px; text-align: right; }
 
 tbody tr.active td        { background: var(--row-active); }
 tbody tr.active td.name,
@@ -77,13 +78,13 @@ tfoot .total-name {
   font-family: system-ui, sans-serif;
   padding-left: 2px;
 }
-tfoot .total-time {
+tfoot .total-xp {
   text-align: right;
   color: var(--fg);
   font-weight: 500;
   padding-left: 10px;
 }
-tfoot .total-xp {
+tfoot .total-time {
   text-align: right;
   color: var(--fg);
   font-weight: 500;
