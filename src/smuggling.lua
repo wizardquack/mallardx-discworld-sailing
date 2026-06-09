@@ -39,6 +39,8 @@ local currentlySailing = false
 local fightingMonster  = false
 local voyageStart      = 0   -- epoch seconds; 0 while no voyage is live
 local voyageDuration   = 0   -- committed final duration of the last voyage
+local stageEnterTime   = 0   -- epoch when currentStage was entered; 0 if none
+local monsterStart     = 0   -- epoch when fightingMonster became true; 0 otherwise
 local monsterName      = "Monster"
 
 local stages          = {}   -- [stageNameString] = seconds
@@ -99,6 +101,37 @@ local function current_voyage_duration()
   return voyageDuration
 end
 
+-- Per-stage seconds = committed time in `stages[name]` plus the live
+-- delta while that stage is the active one. Monster runs concurrently
+-- with whatever weather/calm stage is current, so it has its own delta.
+local function live_stage_secs(name)
+  local secs = stages[name] or 0
+  if currentlySailing then
+    if stageEnterTime > 0 and thisTripStages[currentStage] == name then
+      secs = secs + (os.time() - stageEnterTime)
+    end
+    if name == "Monster" and monsterStart > 0 then
+      secs = secs + (os.time() - monsterStart)
+    end
+  end
+  return secs
+end
+
+local function commit_active_stage()
+  local name = thisTripStages[currentStage]
+  if name and stageEnterTime > 0 then
+    stages[name] = (stages[name] or 0) + (os.time() - stageEnterTime)
+  end
+  stageEnterTime = 0
+end
+
+local function commit_monster()
+  if monsterStart > 0 then
+    stages.Monster = (stages.Monster or 0) + (os.time() - monsterStart)
+    monsterStart = 0
+  end
+end
+
 local function fmt_xp(xp)
   if not xp or xp <= 0 then return nil end
   if xp >= 1000 then
@@ -123,10 +156,10 @@ end
 
 local function build_row(stageNo, isActive)
   local rawName = thisTripStages[stageNo]
-  local secs    = (rawName and stages[rawName]) or 0
   local xp      = stageXp[stageNo]
 
   if stageNo == 5 then
+    local secs = live_stage_secs("Monster")
     -- Monster row stays blank until the fight starts (secs ticks > 0),
     -- is in progress (fightingMonster), or has resolved (xp set).
     if not (secs > 0 or xp or fightingMonster) then
@@ -138,7 +171,11 @@ local function build_row(stageNo, isActive)
   -- Non-monster rows: blank until the leg has been encountered. Search is
   -- entered immediately at voyage start so it shows from the first tick;
   -- weather legs are added to thisTripStages by next_stage() when reached.
-  if not rawName or (not isActive and secs == 0 and not xp) then
+  if not rawName then
+    return { name = nil, time = nil, xp = nil }
+  end
+  local secs = live_stage_secs(rawName)
+  if not isActive and secs == 0 and not xp then
     return { name = nil, time = nil, xp = nil }
   end
   return { name = rawName, time = fmt_mmss(secs), xp = fmt_xp(xp) }
@@ -225,6 +262,11 @@ end
 local function next_stage(stageName)
   if not currentlySailing then return end
 
+  -- Commit the outgoing stage's elapsed time before we move off it, so
+  -- the `stages` table always reflects wall-clock truth up to the moment
+  -- of transition. Re-anchored to the new stage at the end.
+  commit_active_stage()
+
   if stageName == "calm" then
     if currentStage == 0 or currentStage == 2 then
       currentStage = 1
@@ -233,6 +275,7 @@ local function next_stage(stageName)
     else
       currentStage = 8
     end
+    stageEnterTime = os.time()
     push_state()
     return
   end
@@ -257,6 +300,7 @@ local function next_stage(stageName)
     thisTripStages[currentStage] = stageName
     stages[stageName] = stages[stageName] or 0
   end
+  stageEnterTime = os.time()
   push_state()
 end
 
@@ -269,6 +313,8 @@ local function start_mission()
   currentStage     = 0
   voyageStart      = os.time()
   voyageDuration   = 0
+  stageEnterTime   = os.time()   -- anchors Search; subsequent stages re-anchor in next_stage
+  monsterStart     = 0
   fightingMonster  = false
   monsterName      = "Monster"
   reset_mission_tables()
@@ -279,6 +325,11 @@ local function start_mission()
 end
 
 local function end_mission()
+  -- Commit any in-flight live deltas before tearing down state so the
+  -- persisted `stages` table reflects the full voyage. Monster commit
+  -- is a no-op unless the mission aborts mid-fight.
+  commit_active_stage()
+  commit_monster()
   if voyageStart > 0 then
     voyageDuration = os.time() - voyageStart
     voyageStart    = 0
@@ -311,14 +362,8 @@ mud.every(1000, function()
   cooldownWasActive = cdActive
 
   if currentlySailing then
-    local active = thisTripStages[currentStage]
-    if active then
-      stages[active] = (stages[active] or 0) + 1
-    end
-    if fightingMonster then
-      stages.Monster = (stages.Monster or 0) + 1
-    end
-    -- Voyage duration is wall-clock derived in current_voyage_duration();
+    -- All voyage-side timers (voyage duration, per-stage, monster) are
+    -- wall-clock derived via current_voyage_duration / live_stage_secs;
     -- the tick just drives the per-second UI repaint.
     changed = true
   end
@@ -366,6 +411,7 @@ mud.trigger(
   function(m)
     if not currentlySailing then return end
     fightingMonster = true
+    monsterStart    = os.time()
     local marker = m[1] or ""
     if marker:find("kraken") or marker:find("suction cups") then
       monsterName = "Kraken"
@@ -382,6 +428,7 @@ mud.trigger(
     if not currentlySailing then return end
     local xp = m[1]
     if xp then stageXp[5] = xp end
+    commit_monster()
     fightingMonster = false
     push_state()
   end)
