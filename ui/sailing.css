@@ -39,6 +39,15 @@ th, td {
   white-space: nowrap;
 }
 
+/* Consistent edge gutters across head/body/foot so the active-row
+   highlight has breathing room beyond the text without column drift. */
+thead .title,
+tbody td.name,
+tfoot .total-name      { padding-left:  6px; }
+thead .header-right,
+tbody td.time,
+tfoot .total-time      { padding-right: 6px; }
+
 thead .title {
   text-align: left;
   font-weight: 600;
@@ -58,13 +67,15 @@ thead .header-right {
 thead .header-right.cooldown { color: var(--warn); }
 thead .header-right.ready    { color: var(--good); }
 
-tbody td.name { color: var(--fg);       padding-left: 2px; }
+tbody td.name { color: var(--fg); }
 tbody td.xp   { color: var(--fg-muted); padding-left: 10px; text-align: right; min-width: 56px; }
 tbody td.time { color: var(--fg);       padding-left: 10px; text-align: right; }
 
-tbody tr.active td        { background: var(--row-active); }
+tbody tr.active td                  { background: var(--row-active); }
+tbody tr.active td:first-child      { border-radius: 4px 0 0 4px; }
+tbody tr.active td:last-child       { border-radius: 0 4px 4px 0; }
 tbody tr.active td.name,
-tbody tr.active td.time   { color: var(--accent); }
+tbody tr.active td.time             { color: var(--accent); }
 
 tfoot td {
   padding-top: 8px;
@@ -76,7 +87,6 @@ tfoot .total-name {
   font-size: 11px;
   letter-spacing: 0.6px;
   font-family: system-ui, sans-serif;
-  padding-left: 2px;
 }
 tfoot .total-xp {
   text-align: right;
