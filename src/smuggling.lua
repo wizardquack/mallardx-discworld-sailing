@@ -33,11 +33,12 @@ local CALM_STAGES    = { [1] = true, [4] = true, [8] = true }
 local ROW_STAGES = { 0, 2, 3, 5, 6, 7 }
 local STAGE_TO_ROW = { [0] = 0, [2] = 1, [3] = 2, [5] = 3, [6] = 4, [7] = 5 }
 
-local currentCooldown  = 0
+local cooldownEnd      = 0   -- absolute epoch seconds; 0 means no cooldown
 local currentStage     = 0
 local currentlySailing = false
 local fightingMonster  = false
-local voyageDuration   = 0
+local voyageStart      = 0   -- epoch seconds; 0 while no voyage is live
+local voyageDuration   = 0   -- committed final duration of the last voyage
 local monsterName      = "Monster"
 
 local stages          = {}   -- [stageNameString] = seconds
@@ -82,6 +83,20 @@ local function fmt_hhmmss(s)
     math.floor(s / 3600),
     math.floor((s % 3600) / 60),
     s % 60)
+end
+
+-- Wall-clock derived to avoid drift: 7200 1s decrements accumulate
+-- scheduler jitter into minutes over a 2h cooldown.
+local function cooldown_remaining()
+  local r = cooldownEnd - os.time()
+  return r > 0 and r or 0
+end
+
+local function current_voyage_duration()
+  if currentlySailing and voyageStart > 0 then
+    return os.time() - voyageStart
+  end
+  return voyageDuration
 end
 
 local function fmt_xp(xp)
@@ -130,17 +145,19 @@ local function build_row(stageNo, isActive)
 end
 
 local function build_header()
-  if currentCooldown > 0 then
-    return { kind = "cooldown", value = fmt_hhmmss(currentCooldown) }
+  local remaining = cooldown_remaining()
+  if remaining > 0 then
+    return { kind = "cooldown", value = fmt_hhmmss(remaining) }
   end
   return { kind = "ready", value = "Ready" }
 end
 
 local function build_total()
-  if voyageDuration == 0 then return nil end
+  local duration = current_voyage_duration()
+  if duration == 0 then return nil end
   local total_xp = 0
   for _, v in pairs(stageXp) do total_xp = total_xp + (v or 0) end
-  return { time = fmt_mmss(voyageDuration), xp = fmt_xp(total_xp) }
+  return { time = fmt_mmss(duration), xp = fmt_xp(total_xp) }
 end
 
 local function build_state()
@@ -183,8 +200,8 @@ panel:on_message("ready", function() push_state() end)
 -- ---------------------------------------------------------------------
 
 local function save_cooldown()
-  if currentCooldown > 0 then
-    storage.set("cooldown_end", os.time() + currentCooldown)
+  if cooldownEnd > os.time() then
+    storage.set("cooldown_end", cooldownEnd)
   else
     storage.set("cooldown_end", nil)
   end
@@ -248,8 +265,9 @@ end
 -- ---------------------------------------------------------------------
 
 local function start_mission()
-  currentCooldown  = COOLDOWN_SECS
+  cooldownEnd      = os.time() + COOLDOWN_SECS
   currentStage     = 0
+  voyageStart      = os.time()
   voyageDuration   = 0
   fightingMonster  = false
   monsterName      = "Monster"
@@ -261,6 +279,10 @@ local function start_mission()
 end
 
 local function end_mission()
+  if voyageStart > 0 then
+    voyageDuration = os.time() - voyageStart
+    voyageStart    = 0
+  end
   currentlySailing = false
   fightingMonster  = false
   save_last_voyage()
@@ -275,8 +297,9 @@ end
 mud.every(1000, function()
   local changed = false
 
-  if currentCooldown > 0 then
-    currentCooldown = currentCooldown - 1
+  -- Cooldown value is wall-clock derived; the tick just drives the UI
+  -- refresh so the displayed HH:MM:SS rolls forward each second.
+  if cooldown_remaining() > 0 then
     changed = true
   end
 
@@ -288,7 +311,8 @@ mud.every(1000, function()
     if fightingMonster then
       stages.Monster = (stages.Monster or 0) + 1
     end
-    voyageDuration = voyageDuration + 1
+    -- Voyage duration is wall-clock derived in current_voyage_duration();
+    -- the tick just drives the per-second UI repaint.
     changed = true
   end
 
@@ -424,9 +448,8 @@ end)
 do
   local saved_end = tonumber(storage.get("cooldown_end"))
   if saved_end then
-    local remaining = saved_end - os.time()
-    if remaining > 0 then
-      currentCooldown = math.floor(remaining)
+    if saved_end > os.time() then
+      cooldownEnd = saved_end
     else
       storage.set("cooldown_end", nil)
     end
