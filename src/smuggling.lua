@@ -455,13 +455,23 @@ do
     end
   end
 
+  -- Storage round-trips through JSON, so sparse int-keyed tables come back
+  -- with string keys ("2" instead of 2). Coerce keys back for the two
+  -- tables the renderer indexes by integer stageNo.
+  local function with_int_keys(t)
+    if not t then return nil end
+    local out = {}
+    for k, val in pairs(t) do out[tonumber(k) or k] = val end
+    return out
+  end
+
   local v = storage.get("last_voyage")
   if v then
-    stages         = v.stages         or stages
-    stageXp        = v.stageXp        or stageXp
-    thisTripStages = v.thisTripStages or thisTripStages
-    voyageDuration = v.voyageDuration or 0
-    monsterName    = v.monsterName    or "Monster"
+    stages         = v.stages                          or stages
+    stageXp        = with_int_keys(v.stageXp)          or stageXp
+    thisTripStages = with_int_keys(v.thisTripStages)   or thisTripStages
+    voyageDuration = v.voyageDuration                  or 0
+    monsterName    = v.monsterName                     or "Monster"
   end
 end
 
