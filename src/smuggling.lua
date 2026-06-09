@@ -294,14 +294,21 @@ end
 -- pushes the full state snapshot.
 -- ---------------------------------------------------------------------
 
+local cooldownWasActive = false
+
 mud.every(1000, function()
   local changed = false
 
   -- Cooldown value is wall-clock derived; the tick just drives the UI
-  -- refresh so the displayed HH:MM:SS rolls forward each second.
-  if cooldown_remaining() > 0 then
+  -- refresh so the displayed HH:MM:SS rolls forward each second. The
+  -- `or cooldownWasActive` clause forces one final push the tick after
+  -- expiry — otherwise the header freezes at 0:00:01 instead of flipping
+  -- to "Ready", because the tick would otherwise no-op once remaining=0.
+  local cdActive = cooldown_remaining() > 0
+  if cdActive or cooldownWasActive then
     changed = true
   end
+  cooldownWasActive = cdActive
 
   if currentlySailing then
     local active = thisTripStages[currentStage]
