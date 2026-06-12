@@ -24,6 +24,14 @@ html, body {
   font: 12px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
 }
 
+/* Mallard's iframe inject prepends <meta>/<script> before the plugin's
+   <!DOCTYPE>, which drops the document into quirks mode. In quirks mode
+   <table> does not inherit font from its parent (UA default ~16px takes
+   over), so without this our 12px body font is ignored inside the table.
+   Once the host inject is fixed to keep DOCTYPE first this rule is a no-op
+   (standards-mode default), so it's safe to leave as defense-in-depth. */
+table { font: inherit; }
+
 body { padding: 8px 10px; overflow: hidden; }
 
 table {
