@@ -21,7 +21,6 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--fg);
-  font: 12px/1.4 ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 /* Mallard's iframe inject prepends <meta>/<script> before the plugin's
