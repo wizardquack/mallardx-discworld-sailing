@@ -91,6 +91,7 @@ mud.style([[^.*stamp.*out the fire\..*$]],                                      
 mud.style([[^.*a small fire has started here.*$]],                                { fg = "light red"  })
 mud.style([[^.*Fire fills the room, burning merrily without regard.*$]],          { fg = "light red"  })
 mud.style([[^.*putting it out in a cloud of steam\.$]],                            { fg = "green"      })
+mud.style([[^.*putting some of it out in a cloud of steam\.$]],                    { fg = "yellow"     })
 mud.style([[^.*(?:several|Several) blazes are eagerly licking at the floorboards.*$]], { fg = "light red" })
 mud.style([[^.*the room is filled with a huge conflagration.*sparks spilling.*$]], { fg = "light red"  })
 mud.style([[^.*(?:flickering|Flickering) firelight.*$]],                           { fg = "light red"  })
