@@ -474,20 +474,22 @@ mud.trigger(
   function() if currentlySailing then end_mission() end end)
 
 -- ---------------------------------------------------------------------
--- Debug aliases ported from the MUSHclient version. Skipped: !sail (the
--- help dialog), !sailFront (window z-order), !sailkeys (keypad remap).
+-- Debug client commands ported from the MUSHclient version. Skipped:
+-- !sail (the help dialog), !sailFront (window z-order), !sailkeys
+-- (keypad remap). Invoke as /startMission, /endMission, etc. (default
+-- prefix); the user's `command_prefix` setting controls the leader.
 -- ---------------------------------------------------------------------
 
-mud.alias([[^!startMission$]], function() start_mission()
+mud.command("startMission", function() start_mission()
   mud.note("Smuggling mission forced started.") end)
 
-mud.alias([[^!endMission$]], function() end_mission()
+mud.command("endMission", function() end_mission()
   mud.note("Smuggling mission forced ended.") end)
 
-mud.alias([[^!nextStage (\w+)$]], function(m)
-  next_stage(m[1]); mud.note("Forced next stage: " .. m[1]) end)
+mud.command("nextStage", function(m)
+  next_stage(m.args); mud.note("Forced next stage: " .. m.args) end)
 
-mud.alias([[^!sailData$]], function()
+mud.command("sailData", function()
   mud.note("currentStage: " .. tostring(currentStage))
   for k, v in pairs(thisTripStages) do mud.note("  trip[" .. k .. "] = " .. v) end
   for k, v in pairs(stageXp)        do mud.note("  xp[" .. k .. "] = " .. v) end
