@@ -481,19 +481,31 @@ mud.trigger(
 -- ---------------------------------------------------------------------
 
 mud.command("startMission", function() start_mission()
-  mud.note("Smuggling mission forced started.") end)
+  mud.note("Smuggling mission forced started.") end, {
+  description = "Force-start a smuggling mission for tracking.",
+  usage = "startMission",
+})
 
 mud.command("endMission", function() end_mission()
-  mud.note("Smuggling mission forced ended.") end)
+  mud.note("Smuggling mission forced ended.") end, {
+  description = "Force-end the current smuggling mission.",
+  usage = "endMission",
+})
 
 mud.command("nextStage", function(m)
-  next_stage(m.args); mud.note("Forced next stage: " .. m.args) end)
+  next_stage(m.args); mud.note("Forced next stage: " .. m.args) end, {
+  description = "Record the next stage of the active mission.",
+  usage = "nextStage <stage>",
+})
 
 mud.command("sailData", function()
   mud.note("currentStage: " .. tostring(currentStage))
   for k, v in pairs(thisTripStages) do mud.note("  trip[" .. k .. "] = " .. v) end
   for k, v in pairs(stageXp)        do mud.note("  xp[" .. k .. "] = " .. v) end
-end)
+end, {
+  description = "Dump current sailing-run tracking state.",
+  usage = "sailData",
+})
 
 -- ---------------------------------------------------------------------
 -- Restore persistent state across restarts. We store the cooldown

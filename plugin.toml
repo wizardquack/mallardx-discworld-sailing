@@ -1,6 +1,6 @@
 id = "net.mallard.discworld-sailing"
 name = "Discworld Sailing"
-version = "0.5.6"
+version = "0.5.7"
 description = "A Discworld sailing-mission plugin for opinionated highlights and a stage/xp tracking panel"
 language = "lua"
 entry = "src/main.lua"
