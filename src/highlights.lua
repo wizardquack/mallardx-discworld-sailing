@@ -110,10 +110,6 @@ mud.style([[^.*slippery layer of ice\..*$]],           { fg = "light blue" })
 -- === Decking ===
 -- ---------------------------------------------------------------------
 
-mud.style([[^.*The ship plows through a field of floating dire seaweed, some of which glows green and latches onto the hull aggressively!.*$]], { fg = "light red" })
-mud.style([[^.*Looking like it recognises the shipwright's hammer somehow, (?:some|all) of the (?:remaining )?dire seaweed detaches from the hull and flees into the ocean\..*$]], { fg = "green" })
-mud.style([[^.*You see some ice that used to be on the hull drifting off into the sea, accompanied by the sound of seaweedy complaining from below\..*$]], { fg = "yellow" })
-
 mud.style([[^.*(?:you|You) feel too tired to tie any knots.*$]],                                    { fg = "light orange" })
 mud.style([[^.*(?:you|You) manage to shatter all the remaining sea ice on the hull\..*$]],           { fg = "green"        })
 mud.style([[^.*(?:you|You) tie .* of rope securely.*$]],                                              { fg = "green"        })
@@ -134,6 +130,11 @@ mud.style([[(a few patches of sea ice)]],     { capture = 1, fg = "yellow" })
 
 -- Weed
 mud.style([[(a few strands of glowing dire seaweed)]], { capture = 1, fg = "red" })
+mud.style([[(a thin covering of glowing dire seaweed)]], { capture = 1, fg = "red" })
+
+mud.style([[^.*The ship plows through a field of floating dire seaweed, some of which glows green and latches onto the hull aggressively!.*$]], { fg = "light red" })
+mud.style([[^.*Looking like it recognises the shipwright's hammer somehow, (?:some|all) of the (?:remaining )?dire seaweed detaches from the hull and flees into the ocean\..*$]], { fg = "green" })
+mud.style([[^.*You see some ice that used to be on the hull drifting off into the sea, accompanied by the sound of seaweedy complaining from below\..*$]], { fg = "yellow" })
 
 -- Hull damage
 mud.style([[(badly cracked)]],                       { capture = 1, fg = "red"    })
