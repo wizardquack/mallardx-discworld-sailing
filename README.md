@@ -20,6 +20,18 @@ A 1-second timer drives every cell:
   the leg-finished message fires.
 - **Voyage** — total elapsed time + summed XP across all legs.
 
+### Voyage keymap
+
+The plugin ships a built-in **sailing-numpad** keymap layer (8-direction numpad
+steering: numpad8/2/4/6 → fore/aft/port/starboard, corners for diagonals).
+It appears in Settings → Keymaps and can be edited freely — rebind the keys or
+change the commands to taste; your edits persist.
+
+The layer is activated at voyage start and deactivated at voyage end
+automatically. This is controlled by the **Use sailing-numpad keymap during
+voyages** setting (on by default); turn it off to leave your keymap untouched
+during voyages.
+
 ### Debug aliases
 
 | alias            | effect                                              |

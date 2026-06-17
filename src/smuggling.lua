@@ -308,6 +308,16 @@ end
 -- Mission lifecycle.
 -- ---------------------------------------------------------------------
 
+-- The plugin's built-in "sailing-numpad" keymap layer (seeded via [[keymaps]]
+-- in plugin.toml) is activated during voyages when the setting is enabled.
+-- Returns the layer name to toggle, or nil when the user has turned it off.
+local function voyage_keymap()
+  if settings.get("activate_voyage_keymap") then
+    return "sailing-numpad"
+  end
+  return nil
+end
+
 local function start_mission()
   cooldownEnd      = os.time() + COOLDOWN_SECS
   currentStage     = 0
@@ -321,6 +331,8 @@ local function start_mission()
   currentlySailing = true
   storage.set("last_voyage", nil)
   save_cooldown()
+  local km = voyage_keymap()
+  if km then mud.keymap.activate(km) end
   push_state()
 end
 
@@ -337,6 +349,8 @@ local function end_mission()
   currentlySailing = false
   fightingMonster  = false
   save_last_voyage()
+  local km = voyage_keymap()
+  if km then mud.keymap.deactivate(km) end
   push_state()
 end
 
@@ -541,6 +555,15 @@ do
     voyageDuration = v.voyageDuration                  or 0
     monsterName    = v.monsterName                     or "Monster"
   end
+end
+
+-- Defensive: clear any stale voyage layer left over from a plugin reload
+-- mid-voyage. `currentlySailing` isn't persisted, so we'd otherwise leak
+-- the layer until the next mission ends. `deactivate` is a no-op if the
+-- named config isn't on the stack.
+do
+  local km = voyage_keymap()
+  if km then mud.keymap.deactivate(km) end
 end
 
 push_state()
