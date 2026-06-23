@@ -79,14 +79,6 @@ local function fmt_mmss(s)
   return string.format("%02d:%02d", math.floor(s / 60), s % 60)
 end
 
-local function fmt_hhmmss(s)
-  s = math.max(0, math.floor(s))
-  return string.format("%d:%02d:%02d",
-    math.floor(s / 3600),
-    math.floor((s % 3600) / 60),
-    s % 60)
-end
-
 -- Wall-clock derived to avoid drift: 7200 1s decrements accumulate
 -- scheduler jitter into minutes over a 2h cooldown.
 local function cooldown_remaining()
@@ -182,11 +174,14 @@ local function build_row(stageNo, isActive)
 end
 
 local function build_header()
-  local remaining = cooldown_remaining()
-  if remaining > 0 then
-    return { kind = "cooldown", value = fmt_hhmmss(remaining) }
+  if cooldown_remaining() > 0 then
+    -- Send the absolute end epoch and let the iframe tick the HH:MM:SS down
+    -- client-side. cooldownEnd shares the Unix epoch with the iframe's clock
+    -- (same machine), so no per-second push is needed to roll the display —
+    -- which is what kept the 1 Hz timer firing for the whole 2 h cooldown.
+    return { kind = "cooldown", endsAt = cooldownEnd }
   end
-  return { kind = "ready", value = "Ready" }
+  return { kind = "ready" }
 end
 
 local function build_total()
@@ -359,30 +354,13 @@ end
 -- pushes the full state snapshot.
 -- ---------------------------------------------------------------------
 
-local cooldownWasActive = false
-
 mud.every(1000, function()
-  local changed = false
-
-  -- Cooldown value is wall-clock derived; the tick just drives the UI
-  -- refresh so the displayed HH:MM:SS rolls forward each second. The
-  -- `or cooldownWasActive` clause forces one final push the tick after
-  -- expiry — otherwise the header freezes at 0:00:01 instead of flipping
-  -- to "Ready", because the tick would otherwise no-op once remaining=0.
-  local cdActive = cooldown_remaining() > 0
-  if cdActive or cooldownWasActive then
-    changed = true
-  end
-  cooldownWasActive = cdActive
-
-  if currentlySailing then
-    -- All voyage-side timers (voyage duration, per-stage, monster) are
-    -- wall-clock derived via current_voyage_duration / live_stage_secs;
-    -- the tick just drives the per-second UI repaint.
-    changed = true
-  end
-
-  if changed then push_state() end
+  -- Voyage-side timers (voyage duration, per-stage, monster) are wall-clock
+  -- derived via current_voyage_duration / live_stage_secs; the tick drives
+  -- their per-second UI repaint. The cooldown countdown is now ticked
+  -- client-side from header.endsAt, so it no longer needs a per-second push —
+  -- voyages last minutes, where the old cooldown ticking ran for hours.
+  if currentlySailing then push_state() end
 end)
 
 -- ---------------------------------------------------------------------

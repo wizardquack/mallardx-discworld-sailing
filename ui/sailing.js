@@ -33,10 +33,52 @@ for (let i = 0; i < ROWS; i++) {
 // table doesn't reflow as legs are filled in.
 function cell(value) { return (value == null || value === "") ? NBSP : value; }
 
+// Port of smuggling.lua fmt_hhmmss — must stay byte-identical to it so the
+// client-ticked countdown reads the same as a Lua-rendered one would.
+function fmtHHMMSS(s) {
+  s = Math.max(0, Math.floor(s));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return h + ":" + String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
+}
+
+// The cooldown header counts down from an absolute epoch (header.endsAt, shared
+// Unix clock) entirely client-side, so the Lua side no longer pushes once a
+// second for the full 2 h window. We self-flip to "Ready" at expiry.
+let cooldownEndsAt = null;
+let cooldownTimer  = null;
+
+function tickCooldown() {
+  if (cooldownEndsAt == null) return;
+  const remaining = cooldownEndsAt - Date.now() / 1000;
+  if (remaining <= 0) {
+    cooldownEndsAt = null;
+    if (cooldownTimer != null) { clearInterval(cooldownTimer); cooldownTimer = null; }
+    headerRight.textContent = "Ready";
+    headerRight.className = "header-right ready";
+    return;
+  }
+  headerRight.textContent = fmtHHMMSS(remaining);
+  headerRight.className = "header-right cooldown";
+}
+
+function renderHeader(header) {
+  if (header.kind === "cooldown" && typeof header.endsAt === "number") {
+    cooldownEndsAt = header.endsAt;
+    if (cooldownTimer == null) cooldownTimer = setInterval(tickCooldown, 1000);
+    tickCooldown();
+    return;
+  }
+  // Ready (or any non-cooldown header): stop ticking and show the static label.
+  cooldownEndsAt = null;
+  if (cooldownTimer != null) { clearInterval(cooldownTimer); cooldownTimer = null; }
+  headerRight.textContent = "Ready";
+  headerRight.className = "header-right ready";
+}
+
 function applyState(state) {
-  const header = state.header || { kind: "ready", value: "Ready" };
-  headerRight.textContent = header.value;
-  headerRight.className = "header-right " + header.kind;
+  renderHeader(state.header || { kind: "ready" });
 
   const rows = state.rows || [];
   const activeIndex = state.activeIndex;
