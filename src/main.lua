@@ -13,8 +13,13 @@
 --                       voyage total — driven by a 1s timer and a
 --                       wad of triggers.
 --
+--   src/search.lua      linkifies each searchable item in a "you think
+--                       you can spot …" hint into a clickable
+--                       `search <keyword>` command.
+--
 -- Each module registers its host-API calls as side effects of being
 -- required; the returned table is unused here.
 
 require("highlights")
 require("smuggling")
+require("search")
