@@ -131,6 +131,7 @@ mud.style([[(a few patches of sea ice)]],     { capture = 1, fg = "yellow" })
 -- Weed
 mud.style([[(a few strands of glowing dire seaweed)]], { capture = 1, fg = "red" })
 mud.style([[(a thin covering of glowing dire seaweed)]], { capture = 1, fg = "red" })
+mud.style([[(a thick mass of glowing dire seaweed)]], { capture = 1, fg = "red" })
 
 mud.style([[^.*The ship plows through a field of floating dire seaweed, some of which glows green and latches onto the hull aggressively!.*$]], { fg = "light red" })
 mud.style([[^.*Looking like it recognises the shipwright's hammer somehow, (?:some|all) of the (?:remaining )?dire seaweed detaches from the hull and flees into the ocean\..*$]], { fg = "green" })
