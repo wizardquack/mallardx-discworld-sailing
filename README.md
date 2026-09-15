@@ -1,6 +1,6 @@
 # Discworld Sailing
 
-A Discworld sailing-mission plugin with two pieces:
+A Discworld sailing-mission plugin with three pieces:
 
 1. **Highlights** — ~40 regex highlights for sea serpents, kraken,
    fires, ice, helming, rope/hull condition strings, and dragon
@@ -8,6 +8,31 @@ A Discworld sailing-mission plugin with two pieces:
 2. **Smuggling stat panel** — Tracks mission cooldown, per-leg
    timers + XP, monster fight time + XP, and the running voyage total
    in a panel.
+3. **TTS mode** — an optional set of spoken callouts for notable sailing
+   events (off by default; one setting to toggle).
+
+## TTS mode
+
+Turn on **Speak notable sailing events (TTS)** in the plugin's settings to
+have Mallard read out a curated set of callouts through its text-to-speech.
+The toggle takes effect immediately (no reload). Voice, rate and volume are
+configured globally under **Settings → Speech**.
+
+What it speaks, all on a dedicated `sailing` speech channel so callouts queue
+in order:
+
+- **Milestones** — "Voyage begun", each weather stage as it arrives
+  (Fog / Hail / Gale / Storm / Calm seas), "Leg _n_ complete",
+  monster defeated, and "Voyage complete" / "Voyage failed".
+- **Urgent cues** — a monster spawn ("Kraken!" / "Serpent!") and a serpent
+  strike ("Run!") *interrupt* whatever is queued and speak immediately.
+- **Line cues** — "Ship under way", fire started, and boiler run dry.
+  Each is debounced so a repeating line can't say itself twice, and they
+  stay silent outside a live voyage.
+
+The milestone callouts are driven by the same mission state machine that
+feeds the stat panel, so the spoken set stays in lock-step with the panel's
+tracking rather than matching lines independently.
 
 ## Stat panel
 

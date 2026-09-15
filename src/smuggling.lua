@@ -12,6 +12,7 @@
 -- The keypad-remapping alias (!sailkeys) was intentionally skipped.
 
 local panel = mud.panel("sailing")
+local tts   = require("tts")
 
 -- ---------------------------------------------------------------------
 -- Mission state — mirrors the MUSHclient script's globals.
@@ -257,6 +258,11 @@ end
 local function next_stage(stageName)
   if not currentlySailing then return end
 
+  -- Snapshot the stage we're leaving so the TTS callout can tell the
+  -- launch calm (Search → calmStart, was == 0) apart from a genuine
+  -- mid-voyage calming, and skip announcing the former.
+  local was = currentStage
+
   -- Commit the outgoing stage's elapsed time before we move off it, so
   -- the `stages` table always reflects wall-clock truth up to the moment
   -- of transition. Re-anchored to the new stage at the end.
@@ -271,6 +277,8 @@ local function next_stage(stageName)
       currentStage = 8
     end
     stageEnterTime = os.time()
+    -- Announce a mid-voyage calming, but not the launch calm at Search's end.
+    if was ~= 0 then tts.stage("calm") end
     push_state()
     return
   end
@@ -296,6 +304,7 @@ local function next_stage(stageName)
     stages[stageName] = stages[stageName] or 0
   end
   stageEnterTime = os.time()
+  tts.stage(stageName)   -- Fog / Hail / Gale / Storm
   push_state()
 end
 
@@ -328,6 +337,8 @@ local function start_mission()
   save_cooldown()
   local km = voyage_keymap()
   if km then mud.keymap.activate(km) end
+  tts.set_sailing(true)
+  tts.voyage_begun()
   push_state()
 end
 
@@ -346,6 +357,10 @@ local function end_mission()
   save_last_voyage()
   local km = voyage_keymap()
   if km then mud.keymap.deactivate(km) end
+  -- Silence the hazard triggers between voyages. The completion/abort
+  -- callout itself is spoken at the trigger call sites so we can say the
+  -- right thing (complete vs failed) and stay silent on /endMission.
+  tts.set_sailing(false)
   push_state()
 end
 
@@ -393,6 +408,7 @@ mud.trigger(
     local xp = m[1]
     if xp then
       stageXp[currentStage] = xp
+      tts.leg_complete(currentStage)
       push_state()
     end
   end)
@@ -410,6 +426,7 @@ mud.trigger(
     else
       monsterName = "Serpent"
     end
+    tts.monster_spawn(monsterName)
     push_state()
   end)
 
@@ -422,6 +439,7 @@ mud.trigger(
     if xp then stageXp[5] = xp end
     commit_monster()
     fightingMonster = false
+    tts.monster_defeated(monsterName, xp)
     push_state()
   end)
 
@@ -457,13 +475,20 @@ mud.trigger(
     if not currentlySailing then return end
     local xp = m[1]
     if xp then stageXp[7] = xp end
+    tts.leg_complete("final")
+    tts.voyage_complete()
     end_mission()
   end)
 
 -- Mission abort (ship sinks, swam too far, beached, etc).
 mud.trigger(
   [[^(?:As the ship sinks slowly beneath the waves|As you swim a little too far from the ship|You failed your mission because the SS Unsinkable|The ship steams off\.  You're too tired to follow it)]],
-  function() if currentlySailing then end_mission() end end)
+  function()
+    if currentlySailing then
+      tts.voyage_failed()
+      end_mission()
+    end
+  end)
 
 -- ---------------------------------------------------------------------
 -- Debug client commands ported from the MUSHclient version. Skipped:

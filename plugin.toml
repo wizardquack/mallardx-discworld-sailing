@@ -50,3 +50,9 @@ type = "bool"
 default = true
 label = "Use sailing-numpad keymap during voyages"
 description = "When on, the built-in 'sailing-numpad' keymap layer is activated at voyage start and deactivated at voyage end. Edit its bindings in Settings → Keymaps. Turn off to leave your keymap untouched during voyages."
+
+[settings.tts_mode]
+type = "bool"
+default = false
+label = "Speak notable sailing events (TTS)"
+description = "When on, speaks a curated set of sailing callouts through the app's text-to-speech: voyage start/end, each weather stage as it arrives, leg completion, monster spawn/defeat, ship under way, and urgent hazards (serpent strikes, fire, boiler run dry). Speech uses the 'sailing' channel; only monster spawns and serpent strikes interrupt. Toggling takes effect immediately. Configure voice, rate and volume under Settings → Speech."

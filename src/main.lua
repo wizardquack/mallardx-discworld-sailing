@@ -17,9 +17,18 @@
 --                       you can spot …" hint into a clickable
 --                       `search <keyword>` command.
 --
+--   src/tts.lua         optional spoken callouts for notable sailing
+--                       events, gated behind the single `tts_mode`
+--                       setting (off by default). Registers its own
+--                       hazard triggers and exposes milestone hooks that
+--                       smuggling.lua drives from its state machine.
+--
 -- Each module registers its host-API calls as side effects of being
--- required; the returned table is unused here.
+-- required; the returned table is unused here (smuggling.lua pulls in
+-- tts.lua itself for the milestone hooks — requiring it here too is
+-- idempotent and keeps the module roster explicit).
 
 require("highlights")
+require("tts")
 require("smuggling")
 require("search")
