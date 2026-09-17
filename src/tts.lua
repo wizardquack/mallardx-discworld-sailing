@@ -85,12 +85,11 @@ function M.stage(name)
 end
 
 -- Leg finished; the label only, no XP. `which` is the completing stage
--- number for legs 1..3, or the string "final" for the last leg (whose
--- stage has usually already advanced by the time its XP line lands —
--- see smuggling.lua).
+-- number for legs 1..3. The final leg has no callout of its own —
+-- "Voyage complete" lands on the same line and covers it.
 local LEG_LABEL = { [2] = "Leg one complete", [3] = "Leg two complete", [6] = "Leg three complete" }
 function M.leg_complete(which)
-  say((which == "final") and "Final leg complete" or (LEG_LABEL[which] or "Leg complete"))
+  say(LEG_LABEL[which] or "Leg complete")
 end
 
 -- Monster spawn is the one milestone that interrupts: it wants to reach

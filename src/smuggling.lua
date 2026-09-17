@@ -475,7 +475,6 @@ mud.trigger(
     if not currentlySailing then return end
     local xp = m[1]
     if xp then stageXp[7] = xp end
-    tts.leg_complete("final")
     tts.voyage_complete()
     end_mission()
   end)
