@@ -45,6 +45,12 @@ A 1-second timer drives every cell:
   the leg-finished message fires.
 - **Voyage** — total elapsed time + summed XP across all legs.
 
+The cooldown and the last-voyage rows are stored per character, keyed by
+`char.info.name` — the in-game cooldown is per-character, so a world with
+several of your characters tracks each one separately. The panel re-reads
+the current character's data on login and on `su` (but not mid-voyage).
+Before the character name is known, a `_default` bucket is used.
+
 ### Voyage keymap
 
 The plugin ships a built-in **sailing-numpad** keymap layer (8-direction numpad

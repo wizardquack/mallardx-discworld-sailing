@@ -232,17 +232,39 @@ panel:on_message("ready", function() push_state() end)
 -- between voyages doesn't blank out the panel.
 -- ---------------------------------------------------------------------
 
+-- `storage` is scoped per plugin (per world), not per character, so the
+-- character name goes in the key — same shape as mdt's match lists. The
+-- smuggling cooldown is per-character in game, so the single shared
+-- bucket we used to write showed one character's countdown as another's,
+-- and a voyage on either overwrote the other's rows.
+--
+-- The name is resolved from the GMCP mirror at call time rather than
+-- cached in an upvalue: the plugin loads before login, and `su` can swap
+-- characters mid-session. Until the name is known (pre-login, or a world
+-- that never sends char.info) we use the "_default" bucket, so a voyage
+-- tracked without an identity still persists somewhere.
+local DEFAULT_CHAR = "_default"
+
+local function char_name()
+  local name = _G.gmcp and gmcp.get and gmcp.get("char.info.name")
+  if type(name) ~= "string" or name == "" then return DEFAULT_CHAR end
+  return name
+end
+
+local function cooldown_key()    return "cooldown_end:" .. char_name() end
+local function last_voyage_key() return "last_voyage:" .. char_name() end
+
 local function save_cooldown()
   if cooldownEnd > os.time() then
-    storage.set("cooldown_end", cooldownEnd)
+    storage.set(cooldown_key(), cooldownEnd)
   else
-    storage.set("cooldown_end", nil)
+    storage.set(cooldown_key(), nil)
   end
 end
 
 local function save_last_voyage()
   if voyageDuration == 0 then return end
-  storage.set("last_voyage", {
+  storage.set(last_voyage_key(), {
     stages         = stages,
     stageXp        = stageXp,
     thisTripStages = thisTripStages,
@@ -333,7 +355,7 @@ local function start_mission()
   monsterName      = "Monster"
   reset_mission_tables()
   currentlySailing = true
-  storage.set("last_voyage", nil)
+  storage.set(last_voyage_key(), nil)
   save_cooldown()
   local km = voyage_keymap()
   if km then mud.keymap.activate(km) end
@@ -515,6 +537,7 @@ mud.command("nextStage", function(m)
 })
 
 mud.command("sailData", function()
+  mud.note("character: " .. char_name())
   mud.note("currentStage: " .. tostring(currentStage))
   for k, v in pairs(thisTripStages) do mud.note("  trip[" .. k .. "] = " .. v) end
   for k, v in pairs(stageXp)        do mud.note("  xp[" .. k .. "] = " .. v) end
@@ -527,29 +550,59 @@ end, {
 -- Restore persistent state across restarts. We store the cooldown
 -- end-time absolutely (so the math is trivial) and the last-voyage
 -- mission tables as a single blob.
+--
+-- This runs at load *and* on every char.info name change, not just once:
+-- the plugin loads before login, so the load-time pass normally resolves
+-- to the "_default" bucket and the real character's cooldown only arrives
+-- once GMCP tells us who we are.
 -- ---------------------------------------------------------------------
 
-do
-  local saved_end = tonumber(storage.get("cooldown_end"))
+-- Storage round-trips through JSON, so sparse int-keyed tables come back
+-- with string keys ("2" instead of 2). Coerce keys back for the two
+-- tables the renderer indexes by integer stageNo.
+local function with_int_keys(t)
+  if not t then return nil end
+  local out = {}
+  for k, val in pairs(t) do out[tonumber(k) or k] = val end
+  return out
+end
+
+-- Read a character-keyed value, falling back to the flat key this plugin
+-- wrote before the keys were per-character. The first *named* character
+-- to restore after the upgrade claims the legacy value and the flat key
+-- is dropped; while the name is still unknown we read it without
+-- claiming, so an in-flight cooldown isn't swallowed by the "_default"
+-- bucket on a plugin that loaded before login.
+local function read_legacy_or(key, legacy_key)
+  local v = storage.get(key)
+  if v ~= nil then return v end
+  local legacy = storage.get(legacy_key)
+  if legacy ~= nil and char_name() ~= DEFAULT_CHAR then
+    storage.set(key, legacy)
+    storage.set(legacy_key, nil)
+  end
+  return legacy
+end
+
+-- Load the current character's persisted state over a clean slate, so
+-- switching to a character with nothing saved blanks the panel rather
+-- than leaving the previous character's rows and countdown on it.
+local function restore_state()
+  cooldownEnd    = 0
+  voyageDuration = 0
+  monsterName    = "Monster"
+  reset_mission_tables()
+
+  local saved_end = tonumber(read_legacy_or(cooldown_key(), "cooldown_end"))
   if saved_end then
     if saved_end > os.time() then
       cooldownEnd = saved_end
     else
-      storage.set("cooldown_end", nil)
+      storage.set(cooldown_key(), nil)
     end
   end
 
-  -- Storage round-trips through JSON, so sparse int-keyed tables come back
-  -- with string keys ("2" instead of 2). Coerce keys back for the two
-  -- tables the renderer indexes by integer stageNo.
-  local function with_int_keys(t)
-    if not t then return nil end
-    local out = {}
-    for k, val in pairs(t) do out[tonumber(k) or k] = val end
-    return out
-  end
-
-  local v = storage.get("last_voyage")
+  local v = read_legacy_or(last_voyage_key(), "last_voyage")
   if v then
     stages         = v.stages                          or stages
     stageXp        = with_int_keys(v.stageXp)          or stageXp
@@ -557,6 +610,27 @@ do
     voyageDuration = v.voyageDuration                  or 0
     monsterName    = v.monsterName                     or "Monster"
   end
+end
+
+restore_state()
+
+-- Re-hydrate on login and on `su`. Seeded from the mirror so a plugin
+-- reload mid-session doesn't re-read the same bucket on the next frame.
+-- Skipped mid-voyage: a live voyage's stage timers are in-memory only, so
+-- reloading over them would lose the run in progress.
+local hydrated_char = char_name()
+
+if _G.gmcp and gmcp.on then
+  gmcp.on("char.info", function(_pkg, data)
+    if type(data) ~= "table" then return end
+    local name = data.name
+    if type(name) ~= "string" or name == "" then return end
+    if name == hydrated_char then return end
+    hydrated_char = name
+    if currentlySailing then return end
+    restore_state()
+    push_state()
+  end)
 end
 
 -- Defensive: clear any stale voyage layer left over from a plugin reload
