@@ -2,10 +2,11 @@
 --
 -- Two responsibilities, both gated to Discworld via [worlds] match:
 --
---   src/highlights.lua  ~83 mud.style rules ported from tt_dw's
+--   src/highlights.lua  ~90 mud.style rules, most ported from tt_dw's
 --                       missions/sailing/colours.tin (sea serpents,
 --                       kraken, fires, ice, helming, rope/hull
---                       condition). Declarative, no state.
+--                       condition, sun-sighting position reports).
+--                       Declarative, no state.
 --
 --   src/smuggling.lua   smuggling-mission stat panel ported from
 --                       Kiki's MUSHclient SmugglersToolbox.xml.

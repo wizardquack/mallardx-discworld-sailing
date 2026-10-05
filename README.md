@@ -2,9 +2,9 @@
 
 A Discworld sailing-mission plugin with three pieces:
 
-1. **Highlights** — ~40 regex highlights for sea serpents, kraken,
-   fires, ice, helming, rope/hull condition strings, and dragon
-   wrangling.
+1. **Highlights** — ~90 regex highlights for sea serpents, kraken,
+   fires, ice, helming, rope/hull condition strings, dragon
+   wrangling, and sun-sighting position reports.
 2. **Smuggling stat panel** — Tracks mission cooldown, per-leg
    timers + XP, monster fight time + XP, and the running voyage total
    in a panel.

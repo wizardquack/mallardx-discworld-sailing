@@ -165,4 +165,30 @@ mud.style([[^.*The powerful headwind causes.*$]],                               
 mud.style([[^You feel the ship slow to a halt\.]], { fg = "yellow" })
 mud.style([[^You feel the ship begin to move\.]],  { fg = "yellow" })
 
+-- ---------------------------------------------------------------------
+-- === Navigation ===
+-- ---------------------------------------------------------------------
+
+-- The sun-sighting position report. Its opening clause varies a lot
+-- ("From a careful squint at the sun, you are able to ascertain that…",
+-- "Squinting up at the sun, you determine that…", "Carefully looking up
+-- out of the corner of your eye, you decide from the sun's position
+-- that…"), so the pattern is unanchored and keys off the stable middle:
+-- "…the ship is heading X and that you're Y and Z of <port>."
+--
+-- Three parts get their own colour, so this uses mud.style's per-capture
+-- form (`captures = { [N] = { fg = … } }`) rather than one call per
+-- capture: 1 = the heading, 2 = the rimwards/hubwards leg, 3 = the
+-- turnwise/widdershins leg. `miles?` covers the singular "one mile"; the
+-- heading capture is deliberately loose so any qualifier ("directly",
+-- "widdershins-hubwards") comes along with it.
+mud.style(
+  [[that the ship is (?:currently )?heading (.+?) and that you(?:'re| are) (.+? miles? (?:hubwards|rimwards)) and (.+? miles? (?:turnwise|widdershins)) of ]],
+  { captures = {
+      [1] = { fg = "light cyan"    },
+      [2] = { fg = "orange"        },
+      [3] = { fg = "light magenta" },
+  } }
+)
+
 return {}
