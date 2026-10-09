@@ -98,10 +98,9 @@ function M.monster_spawn(name)
   say((name or "Monster") .. "!", true)
 end
 
-function M.monster_defeated(name, xp)
-  local label = (name or "Monster") .. " defeated"
-  if xp and xp > 0 then label = label .. ", " .. xp .. " xp" end
-  say(label)
+-- Monster defeated; the label only, no XP (the panel shows the number).
+function M.monster_defeated(name)
+  say((name or "Monster") .. " defeated")
 end
 
 -- ---------------------------------------------------------------------

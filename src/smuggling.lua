@@ -461,7 +461,7 @@ mud.trigger(
     if xp then stageXp[5] = xp end
     commit_monster()
     fightingMonster = false
-    tts.monster_defeated(monsterName, xp)
+    tts.monster_defeated(monsterName)
     push_state()
   end)
 
