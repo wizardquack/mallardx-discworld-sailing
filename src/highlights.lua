@@ -175,6 +175,9 @@ mud.style([[^You feel the ship begin to move\.]],  { fg = "yellow" })
 -- out of the corner of your eye, you decide from the sun's position
 -- that…"), so the pattern is unanchored and keys off the stable middle:
 -- "…the ship is heading X and that you're Y and Z of <port>."
+-- Either leg is dropped when it's zero ("…you're one hundred and eight
+-- miles rimwards of Ankh-Morpork."), so both are optional; an absent
+-- capture is simply left unstyled.
 --
 -- Three parts get their own colour, so this uses mud.style's per-capture
 -- form (`captures = { [N] = { fg = … } }`) rather than one call per
@@ -183,7 +186,7 @@ mud.style([[^You feel the ship begin to move\.]],  { fg = "yellow" })
 -- heading capture is deliberately loose so any qualifier ("directly",
 -- "widdershins-hubwards") comes along with it.
 mud.style(
-  [[that the ship is (?:currently )?heading (.+?) and that you(?:'re| are) (.+? miles? (?:hubwards|rimwards)) and (.+? miles? (?:turnwise|widdershins)) of ]],
+  [[that the ship is (?:currently )?heading (.+?) and that you(?:'re| are) (?:(.+? miles? (?:hubwards|rimwards))(?: and )?)?(.+? miles? (?:turnwise|widdershins))? of ]],
   { captures = {
       [1] = { fg = "light cyan"    },
       [2] = { fg = "orange"        },
