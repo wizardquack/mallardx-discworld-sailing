@@ -387,11 +387,32 @@ local function end_mission()
 end
 
 -- ---------------------------------------------------------------------
--- Per-second tick. Drives cooldown countdown + active-stage timers, then
--- pushes the full state snapshot.
+-- Per-second tick. Checks the sail warning and drives the
+-- active-stage timers, then pushes the full state snapshot.
 -- ---------------------------------------------------------------------
 
+-- Sail warning, spoken when the cooldown reaches the user's lead time
+-- (`tts_sail_warning_minutes`, default 10). The window is a minute wide
+-- rather than an exact crossing so a tick that lands late (or a login/`su`
+-- just under the mark) still catches it, but one that's well past the mark
+-- stays quiet rather than announcing "10 minutes" with 3 left. Keyed on the
+-- cooldown's end epoch so it speaks once per cooldown, and a character
+-- switch to a different cooldown re-arms it.
+local sailWarnedFor = 0
+
+local function check_sail_warning()
+  if cooldownEnd == sailWarnedFor then return end
+  local lead = tts.sail_warning_secs()
+  if not lead then return end
+  local r = cooldown_remaining()
+  if r <= lead and r > lead - 60 then
+    sailWarnedFor = cooldownEnd
+    tts.sail_warning()
+  end
+end
+
 mud.every(1000, function()
+  check_sail_warning()
   -- Voyage-side timers (voyage duration, per-stage, monster) are wall-clock
   -- derived via current_voyage_duration / live_stage_secs; the tick drives
   -- their per-second UI repaint. The cooldown countdown is now ticked

@@ -22,6 +22,10 @@
 --     Only genuinely time-critical cues (monster spawn, serpent "Run!"
 --     strike) pass `interrupt` to purge the lane and speak now.
 --
+--   * The cooldown's sail warning has its own settings (`tts_sail_warning`
+--     toggle, `_minutes`, `_text`) independent of `tts_mode`: it's useful on
+--     its own to someone who doesn't want the rest of the voyage chatter.
+--
 -- Returns a table of hooks for `smuggling.lua`.
 
 local M = {}
@@ -34,12 +38,29 @@ local CHANNEL = "sailing"
 local enabled = settings.get("tts_mode") and true or false
 local sailing = false
 
+-- Sail warning settings, cached like `enabled`: `smuggling.lua` asks for the
+-- lead time on every 1s tick.
+local DEFAULT_WARNING_TEXT = "10 minute sail warning"
+local sail_warning, sail_warning_secs, sail_warning_text
+
+local function load_sail_warning()
+  sail_warning = settings.get("tts_sail_warning") and true or false
+  local mins = math.floor(tonumber(settings.get("tts_sail_warning_minutes")) or 10)
+  sail_warning_secs = math.max(1, mins) * 60
+  local text = settings.get("tts_sail_warning_text")
+  if type(text) ~= "string" or text:match("^%s*$") then text = DEFAULT_WARNING_TEXT end
+  sail_warning_text = text
+end
+load_sail_warning()
+
 settings.on("change", function(key)
   if key == "tts_mode" then
     enabled = settings.get("tts_mode") and true or false
     -- Flush anything queued/mid-utterance so turning the mode off is silent
     -- immediately rather than after the current backlog drains.
     if not enabled then mud.stop_speech(CHANNEL) end
+  elseif key:match("^tts_sail_warning") then
+    load_sail_warning()
   end
 end)
 
@@ -101,6 +122,19 @@ end
 -- Monster defeated; the label only, no XP (the panel shows the number).
 function M.monster_defeated(name)
   say((name or "Monster") .. " defeated")
+end
+
+-- Seconds before the cooldown ends to speak the sail warning, or nil when
+-- the warning is off (so the tick can skip the check entirely).
+function M.sail_warning_secs()
+  return sail_warning and sail_warning_secs or nil
+end
+
+-- Cooldown has reached the warning time. Gated on its own setting, not
+-- `tts_mode`.
+function M.sail_warning()
+  if not sail_warning then return end
+  mud.speak(sail_warning_text, { channel = CHANNEL })
 end
 
 -- ---------------------------------------------------------------------

@@ -34,6 +34,19 @@ The milestone callouts are driven by the same mission state machine that
 feeds the stat panel, so the spoken set stays in lock-step with the panel's
 tracking rather than matching lines independently.
 
+### Sail warning
+
+A separate setting, **Speak a sail warning before the cooldown ends (TTS)**
+(off by default), speaks once when the smuggling cooldown gets down to a set
+time. It works whether or not TTS mode is on. Two more settings control it:
+
+- **Sail warning — minutes left**: when to speak it (default 10).
+- **Sail warning — text to speak**: what to say (default "10 minute sail
+  warning"). If you change the minutes, update the text to match.
+
+If you log in or `su` with up to a minute less than that left, it still
+speaks. Any later and it stays quiet.
+
 ## Stat panel
 
 A 1-second timer drives every cell:

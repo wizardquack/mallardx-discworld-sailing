@@ -69,3 +69,23 @@ type = "bool"
 default = false
 label = "Speak notable sailing events (TTS)"
 description = "When on, speaks a curated set of sailing callouts through the app's text-to-speech: voyage start/end, each weather stage as it arrives, leg completion, monster spawn/defeat, ship under way, and urgent hazards (serpent strikes, fire, boiler run dry). Speech uses the 'sailing' channel; only monster spawns and serpent strikes interrupt. Toggling takes effect immediately. Configure voice, rate and volume under Settings → Speech."
+
+[settings.tts_sail_warning]
+type = "bool"
+default = false
+label = "Speak a sail warning before the cooldown ends (TTS)"
+description = "When on, speaks the sail warning text once when the smuggling cooldown reaches the minutes set below. Works independently of the sailing-events TTS setting above. Speech uses the 'sailing' channel; configure voice, rate and volume under Settings → Speech."
+
+[settings.tts_sail_warning_minutes]
+type = "number"
+default = 10
+min = 1
+max = 119
+label = "Sail warning — minutes left"
+description = "How many minutes before the smuggling cooldown ends to speak the sail warning. If you change this, update the warning text to match."
+
+[settings.tts_sail_warning_text]
+type = "string"
+default = "10 minute sail warning"
+label = "Sail warning — text to speak"
+description = "What to say at the warning time. Clear the box to go back to \"10 minute sail warning\"."
